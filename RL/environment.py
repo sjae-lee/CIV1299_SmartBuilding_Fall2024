@@ -65,9 +65,6 @@ class SimpleEnv(gym.Env):
         # reward =  - penalty
         reward = (action/self._COP[i]/6 * self._Price[i])*100 - 10*penalty
 
-        print(reward)
-        print((action/self._COP[i]/6 * self._Price[i])*100, -10*penalty)
-
         self._current_timestep += 1
         observation = self._get_obs()
         info = self._get_info()
