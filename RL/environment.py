@@ -20,11 +20,13 @@ class SimpleEnv(gym.Env):
         self._Price = Price
         self._u_dist = u_dist
 
-        self.observation_space = gym.spaces.Box(0, 50, dtype=float) #gym.spaces.Dict({"Tin": gym.spaces.Box(0, 50, dtype=float)})
+        self.observation_space = gym.spaces.Dict({"Tin": gym.spaces.Box(0, 50, dtype=float),
+                                                  "curret_timestep": gym.spaces.Box(0, 300, dtype=int)})
         self.action_space = gym.spaces.Box(-2, 0, dtype=float)
 
     def _get_obs(self):
-        return self._current_indoor_temperature#{"Tin": self._current_indoor_temperature}
+        return {"Tin": self._current_indoor_temperature,
+                "curret_timestep": self._current_timestep}
     
     def _get_info(self):
         return {"curret_timestep": self._current_timestep}
