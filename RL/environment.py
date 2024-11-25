@@ -61,8 +61,13 @@ class SimpleEnv(gym.Env):
         self._current_timestep += 1
         observation = self._get_obs()
         info = self._get_info()
+        if i == self._u_dist.shape[0]-1:
+            terminated =True
+        else: terminated =False
+        print(terminated)
+        truncated = False
         
-        return observation, reward, info
+        return observation, reward, terminated, truncated, info
 
 # Electricity rates
 def func_price(i):
