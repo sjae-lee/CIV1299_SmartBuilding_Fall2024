@@ -1,3 +1,4 @@
+from typing import Optional
 import numpy as np
 import gymnasium as gym
 
@@ -7,7 +8,7 @@ class SimpleEnv(gym.Env):
                  Cd, Dd_HVAC, Dd_dist,
                  COP, Price, u_dist):
         self._state = np.array([[24, 25.5]], dtype=np.float32)
-        self._current_indoor_temperature = np.array([self._state[0,0]], dtype=np.int32)
+        self._current_indoor_temperature = self._state[0,0]
         self._current_timestep = 0
         self.Ad = Ad
         self.Bd_HVAC = Bd_HVAC
@@ -19,19 +20,19 @@ class SimpleEnv(gym.Env):
         self._Price = Price
         self._u_dist = u_dist
 
-        self.observation_space = gym.spaces.Dict({"Tin": gym.spaces.Box(0, 50, dtype=float)})
+        self.observation_space = gym.spaces.Box(0, 50, dtype=float) #gym.spaces.Dict({"Tin": gym.spaces.Box(0, 50, dtype=float)})
         self.action_space = gym.spaces.Box(-2, 0, dtype=float)
 
     def _get_obs(self):
-        return {"Tin": self._current_indoor_temperature}
+        return self._current_indoor_temperature#{"Tin": self._current_indoor_temperature}
     
     def _get_info(self):
         return {"curret_timestep": self._current_timestep}
     
-    def reset(self):
+    def reset(self, seed: Optional[int] = None):
         super().reset()
         self._state = np.array([[24, 25.5]], dtype=np.float32)
-        self._current_indoor_temperature = np.array([self._state[0,0]], dtype=np.int32)
+        self._current_indoor_temperature = self._state[0,0]
         self._current_timestep = 0
         observation = self._get_obs()
         info = self._get_info()
@@ -48,23 +49,31 @@ class SimpleEnv(gym.Env):
     def step(self, action):
         i = self._current_timestep
         self._state = self.compute_x(self._state.T,
-                                np.array([[action*1000]]),
+                                np.array([action*1000]),
                                 self._u_dist[i:i+1,:].T,
                                 self.Ad, self.Bd_HVAC, self.Bd_dist).T
         
         self._current_indoor_temperature = self.compute_y(self._state.T,
-                                                     np.array([[action*1000]]),
+                                                     np.array([action*1000]),
                                                      self._u_dist[i:i+1,:].T,
                                                      self.Cd, self.Dd_HVAC, self.Dd_dist)[0]
+        if self._current_indoor_temperature > 24.:
+            penalty = self._current_indoor_temperature - 24.
+        else:
+            penalty = self._current_indoor_temperature * 0.
 
-        reward = action/self._COP[i]/6 * self._Price[i]
+        # reward =  - penalty
+        reward = (action/self._COP[i]/6 * self._Price[i])*100 - 10*penalty
+
+        print(reward)
+        print((action/self._COP[i]/6 * self._Price[i])*100, -10*penalty)
+
         self._current_timestep += 1
         observation = self._get_obs()
         info = self._get_info()
         if i == self._u_dist.shape[0]-1:
             terminated =True
         else: terminated =False
-        print(terminated)
         truncated = False
         
         return observation, reward, terminated, truncated, info
