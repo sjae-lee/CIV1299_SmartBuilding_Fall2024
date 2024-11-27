@@ -62,10 +62,9 @@ class SimpleEnv(gym.Env):
         if self._current_indoor_temperature > 24.:
             penalty = self._current_indoor_temperature - 24.
         else:
-            penalty = self._current_indoor_temperature * 0.
+            penalty = -0.05
 
-        # reward =  - penalty
-        reward = (action/self._COP[i]/6 * self._Price[i])*100 - 10*penalty
+        reward = (action/self._COP[i]/6 * self._Price[i] + 0.000798)*1000 - 10*penalty
 
         self._current_timestep += 1
         observation = self._get_obs()
